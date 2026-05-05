@@ -2,12 +2,12 @@
 
 import ReactECharts from "echarts-for-react";
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import CallActivityHeatmap from "../../../components/dashboard/CallActivityHeatmap";
 import { ChartContainer } from "../../../components/dashboard/ChartContainer";
 import { InfoTooltip } from "../../../components/dashboard/InfoTooltip";
 import { useCallsWorker } from "../../../hooks/useCallsWorker";
 import { formatDate, getAdjustedDate } from "../../../lib/utils/time";
 import { useChatStore } from "../../../store";
-import CallActivityHeatmap from "../../../components/dashboard/CallActivityHeatmap";
 
 const bauhausColors = ["#111111", "#D93829", "#0055A4", "#FFCC00", "#555555"];
 

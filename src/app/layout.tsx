@@ -23,6 +23,7 @@ const spaceGrotesk = Space_Grotesk({
 	variable: "--font-space",
 });
 
+import { MobileBlocker } from "../components/MobileBlocker";
 import { ThemeToggle } from "../components/ThemeToggle";
 
 export const metadata: Metadata = {
@@ -41,7 +42,10 @@ export default function RootLayout({
 			className={`${inter.variable} ${outfit.variable} ${playfair.variable} ${quicksand.variable} ${spaceGrotesk.variable} h-full antialiased`}
 			suppressHydrationWarning
 		>
-			<body className="min-h-full flex flex-col">{children}</body>
+			<body className="min-h-full flex flex-col">
+				<MobileBlocker />
+				{children}
+			</body>
 		</html>
 	);
 }

@@ -41,7 +41,10 @@ export interface ThreadData {
 	wdDetails: Record<string, Record<string, number>>;
 	hDetails: Record<string, Record<string, number>>;
 	slotDetails: Record<string, Record<string, number>>;
-	timelineCounts: Record<string, { total: number; senders: Record<string, number> }>;
+	timelineCounts: Record<
+		string,
+		{ total: number; senders: Record<string, number> }
+	>;
 	peakTrackers: Record<string, Record<string, number>>;
 	timestamps: number[];
 }
@@ -83,14 +86,21 @@ self.onmessage = async (event: MessageEvent<SocialCircleRequest>) => {
 
 			if (format === "unknown") continue;
 
-			const chat = format === "legacy" ? parseMessengerLegacy(json) : parseMessengerE2EE(json);
+			const chat =
+				format === "legacy"
+					? parseMessengerLegacy(json)
+					: parseMessengerE2EE(json);
 
 			const threadName = chat.metadata.threadName || "Unknown Chat";
 			// Use the folder path to uniquely identify threads with the same name
-			const threadPath = (file as any).webkitRelativePath ? (file as any).webkitRelativePath.split("/").slice(0, -1).join("/") : threadName;
-			
+			const threadPath = (file as any).webkitRelativePath
+				? (file as any).webkitRelativePath.split("/").slice(0, -1).join("/")
+				: threadName;
+
 			if (!threads[threadPath]) {
-				const trueParticipants = chat.metadata.participants.filter((p) => p !== "Meta AI");
+				const trueParticipants = chat.metadata.participants.filter(
+					(p) => p !== "Meta AI",
+				);
 				threads[threadPath] = {
 					threadName,
 					threadPath,
@@ -101,8 +111,16 @@ self.onmessage = async (event: MessageEvent<SocialCircleRequest>) => {
 					catCounts: {},
 					msgStats: {
 						types: {
-							text: 0, links: 0, images: 0, gifs: 0, videos: 0,
-							stickers: 0, audio: 0, files: 0, other: 0, unsent: 0,
+							text: 0,
+							links: 0,
+							images: 0,
+							gifs: 0,
+							videos: 0,
+							stickers: 0,
+							audio: 0,
+							files: 0,
+							other: 0,
+							unsent: 0,
 						},
 						totalWords: 0,
 						emojiCount: 0,
@@ -160,14 +178,18 @@ self.onmessage = async (event: MessageEvent<SocialCircleRequest>) => {
 						cat === MessageCategory.MissedCall;
 
 					if (!isSystem) {
-						t.msgStats.totalWords += m.content.split(/\s+/).filter(Boolean).length;
+						t.msgStats.totalWords += m.content
+							.split(/\s+/)
+							.filter(Boolean).length;
 						const emojis = m.content.match(emojiRegex);
 						if (emojis) t.msgStats.emojiCount += emojis.length;
 					}
 				}
 
 				// Localized date handling matching Overview page
-				const d = new Date(m.timestampMs + (timezoneOffset - systemOffset) * 60000);
+				const d = new Date(
+					m.timestampMs + (timezoneOffset - systemOffset) * 60000,
+				);
 				const dy = getLocalDateKey(d);
 				daysSet.add(dy);
 
@@ -179,7 +201,8 @@ self.onmessage = async (event: MessageEvent<SocialCircleRequest>) => {
 				const sender = m.senderName;
 				const slotKey = `${dayIdx}-${hourIdx}`;
 				if (!t.slotDetails[slotKey]) t.slotDetails[slotKey] = {};
-				t.slotDetails[slotKey][sender] = (t.slotDetails[slotKey][sender] || 0) + 1;
+				t.slotDetails[slotKey][sender] =
+					(t.slotDetails[slotKey][sender] || 0) + 1;
 
 				if (!t.wdDetails[dayIdx]) t.wdDetails[dayIdx] = {};
 				t.wdDetails[dayIdx][sender] = (t.wdDetails[dayIdx][sender] || 0) + 1;
@@ -191,7 +214,8 @@ self.onmessage = async (event: MessageEvent<SocialCircleRequest>) => {
 					t.timelineCounts[dy] = { total: 0, senders: {} };
 				}
 				t.timelineCounts[dy].total++;
-				t.timelineCounts[dy].senders[sender] = (t.timelineCounts[dy].senders[sender] || 0) + 1;
+				t.timelineCounts[dy].senders[sender] =
+					(t.timelineCounts[dy].senders[sender] || 0) + 1;
 
 				const y = d.getFullYear().toString();
 				const mon = `${y}-${String(d.getMonth() + 1).padStart(2, "0")}`;

@@ -67,14 +67,22 @@ const ActivityHeatmap = ({
 		});
 
 		return () => worker.terminate();
-	}, [messages, timezoneOffset, selectedParticipants, timeRange, precomputedData]);
+	}, [
+		messages,
+		timezoneOffset,
+		selectedParticipants,
+		timeRange,
+		precomputedData,
+	]);
 
 	const renderBreakdownTooltip = (
 		title: string,
 		count: number,
 		senders: Record<string, number>,
 	) => {
-		const sortedSenders = Object.entries(senders || {}).sort((a, b) => b[1] - a[1]);
+		const sortedSenders = Object.entries(senders || {}).sort(
+			(a, b) => b[1] - a[1],
+		);
 		const top3 = sortedSenders.slice(0, 3);
 		const others = sortedSenders.slice(3);
 
@@ -312,10 +320,10 @@ const ActivityHeatmap = ({
 						notMerge={true}
 					/>
 				) : (
-                    <div className="absolute inset-0 flex items-center justify-center text-[10px] uppercase font-bold tracking-widest text-[#888]">
-                        No Data Available
-                    </div>
-                )}
+					<div className="absolute inset-0 flex items-center justify-center text-[10px] uppercase font-bold tracking-widest text-[#888]">
+						No Data Available
+					</div>
+				)}
 			</div>
 		</ChartContainer>
 	);

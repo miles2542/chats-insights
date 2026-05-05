@@ -134,7 +134,10 @@ export const useChatStore = create<ChatStore>((set) => ({
 	doubleTextMinGap: 10,
 	doubleTextMaxGap: 120,
 	maxResponseGapThreshold: 10,
-	hasSeenTutorial: typeof window !== "undefined" ? sessionStorage.getItem("hasSeenOnboarding") === "true" : false,
+	hasSeenTutorial:
+		typeof window !== "undefined"
+			? sessionStorage.getItem("hasSeenOnboarding") === "true"
+			: false,
 
 	language: {
 		isInitialized: false,

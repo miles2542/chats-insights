@@ -3,10 +3,10 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { DateRangePicker } from "../../components/DateRangePicker";
+import { CorpusExplorer } from "../../components/dashboard/CorpusExplorer";
 import { DayWindowSlider } from "../../components/dashboard/controls/DayWindowSlider";
 import { ThemeToggle } from "../../components/ThemeToggle";
 import { useChatStore } from "../../store";
-import { CorpusExplorer } from "../../components/dashboard/CorpusExplorer";
 
 export default function DashboardLayout({
 	children,
@@ -75,9 +75,9 @@ export default function DashboardLayout({
 
 	const displayThread = useMemo(() => {
 		if (!isLoaded) return "Structural Analysis";
-		const realParticipants = participants.filter(p => p !== "Meta AI");
+		const realParticipants = participants.filter((p) => p !== "Meta AI");
 		if (realParticipants.length > 2) return threadName; // Group chat
-		const other = realParticipants.find(p => p !== owner);
+		const other = realParticipants.find((p) => p !== owner);
 		return other || threadName;
 	}, [isLoaded, participants, owner, threadName]);
 
@@ -347,186 +347,186 @@ export default function DashboardLayout({
 										onClick={() => setIsSettingsOpen(false)}
 									/>
 									<div className="absolute top-full right-0 mt-2 w-96 bg-white dark:bg-[#111] border-2 border-[#111] dark:border-[#EAE8E3] shadow-[12px_12px_0px_0px_#111] dark:shadow-[12px_12px_0px_0px_#EAE8E3] z-50 p-8 flex flex-col gap-8 max-h-[85vh] overflow-y-auto custom-scrollbar">
-									<section>
-										<h4 className="text-[10px] uppercase tracking-[0.2em] font-black text-[#D93829] mb-6 flex items-center gap-2">
-											<div className="w-2 h-2 bg-[#D93829]" />
-											Temporal Calibration
-										</h4>
-										<div className="flex flex-col gap-6">
-											<div className="space-y-3">
+										<section>
+											<h4 className="text-[10px] uppercase tracking-[0.2em] font-black text-[#D93829] mb-6 flex items-center gap-2">
+												<div className="w-2 h-2 bg-[#D93829]" />
+												Temporal Calibration
+											</h4>
+											<div className="flex flex-col gap-6">
+												<div className="space-y-3">
+													<label className="text-[10px] uppercase font-bold text-[#888] flex justify-between">
+														<span>Timezone Offset</span>
+														<span className="text-[#111] dark:text-[#EAE8E3]">
+															UTC {timezoneOffset >= 0 ? "+" : ""}
+															{timezoneOffset / 60}
+														</span>
+													</label>
+													<input
+														type="range"
+														min="-720"
+														max="840"
+														step="30"
+														value={timezoneOffset}
+														onChange={(e) =>
+															setTimezoneOffset(Number(e.target.value))
+														}
+														className="w-full accent-[#D93829] h-1.5 bg-[#F5F5F5] dark:bg-[#1A1A1A] appearance-none border border-[#EAE8E3] dark:border-[#333]"
+													/>
+												</div>
+
+												<div className="space-y-3">
+													<label className="text-[10px] uppercase font-bold text-[#888]">
+														Day Windows
+													</label>
+													<p className="text-[8px] text-[#888] font-bold uppercase leading-tight">
+														Drag handles to set when Night ends and Morning
+														begins. Night wraps across midnight.
+													</p>
+													<DayWindowSlider
+														nightEnd={nightEndHour}
+														morningStart={morningStartHour}
+														morningEnd={morningEndHour}
+														nightStart={nightStartHour}
+														onChange={(nE, mS, mE, nS) =>
+															setDayWindows(nE, mS, mE, nS)
+														}
+													/>
+												</div>
+
+												<div className="space-y-3">
+													<label className="text-[10px] uppercase font-bold text-[#888] flex justify-between">
+														<span>Overnight Min Gap</span>
+														<span className="text-[#111] dark:text-[#EAE8E3]">
+															{overnightMinGap / 60}h
+														</span>
+													</label>
+													<input
+														type="range"
+														min="60"
+														max="480"
+														step="30"
+														value={overnightMinGap}
+														onChange={(e) =>
+															setOvernightMinGap(Number(e.target.value))
+														}
+														className="w-full accent-[#D93829] h-1.5 bg-[#F5F5F5] dark:bg-[#1A1A1A] appearance-none border border-[#EAE8E3] dark:border-[#333]"
+													/>
+													<p className="text-[8px] uppercase font-bold text-[#888] leading-tight">
+														Minimum gap to classify as an overnight break (sleep
+														boundary).
+													</p>
+												</div>
+											</div>
+										</section>
+
+										<section className="border-t border-[#EAE8E3] dark:border-[#333] pt-8">
+											<h4 className="text-[10px] uppercase tracking-[0.2em] font-black text-[#0055A4] mb-6 flex items-center gap-2">
+												<div className="w-2 h-2 bg-[#0055A4]" />
+												Session Boundaries
+											</h4>
+											<div className="space-y-4">
 												<label className="text-[10px] uppercase font-bold text-[#888] flex justify-between">
-													<span>Timezone Offset</span>
+													<span>Inactivity Threshold</span>
 													<span className="text-[#111] dark:text-[#EAE8E3]">
-														UTC {timezoneOffset >= 0 ? "+" : ""}
-														{timezoneOffset / 60}
+														{sessionGapThreshold}m
 													</span>
 												</label>
 												<input
 													type="range"
-													min="-720"
-													max="840"
-													step="30"
-													value={timezoneOffset}
+													min="3"
+													max="120"
+													step="1"
+													value={sessionGapThreshold}
 													onChange={(e) =>
-														setTimezoneOffset(Number(e.target.value))
+														setSessionGapThreshold(Number(e.target.value))
 													}
-													className="w-full accent-[#D93829] h-1.5 bg-[#F5F5F5] dark:bg-[#1A1A1A] appearance-none border border-[#EAE8E3] dark:border-[#333]"
-												/>
-											</div>
-
-											<div className="space-y-3">
-												<label className="text-[10px] uppercase font-bold text-[#888]">
-													Day Windows
-												</label>
-												<p className="text-[8px] text-[#888] font-bold uppercase leading-tight">
-													Drag handles to set when Night ends and Morning
-													begins. Night wraps across midnight.
-												</p>
-												<DayWindowSlider
-													nightEnd={nightEndHour}
-													morningStart={morningStartHour}
-													morningEnd={morningEndHour}
-													nightStart={nightStartHour}
-													onChange={(nE, mS, mE, nS) =>
-														setDayWindows(nE, mS, mE, nS)
-													}
-												/>
-											</div>
-
-											<div className="space-y-3">
-												<label className="text-[10px] uppercase font-bold text-[#888] flex justify-between">
-													<span>Overnight Min Gap</span>
-													<span className="text-[#111] dark:text-[#EAE8E3]">
-														{overnightMinGap / 60}h
-													</span>
-												</label>
-												<input
-													type="range"
-													min="60"
-													max="480"
-													step="30"
-													value={overnightMinGap}
-													onChange={(e) =>
-														setOvernightMinGap(Number(e.target.value))
-													}
-													className="w-full accent-[#D93829] h-1.5 bg-[#F5F5F5] dark:bg-[#1A1A1A] appearance-none border border-[#EAE8E3] dark:border-[#333]"
+													className="w-full accent-[#0055A4] h-1.5 bg-[#F5F5F5] dark:bg-[#1A1A1A] appearance-none border border-[#EAE8E3] dark:border-[#333]"
 												/>
 												<p className="text-[8px] uppercase font-bold text-[#888] leading-tight">
-													Minimum gap to classify as an overnight break (sleep
-													boundary).
+													Defines when a conversation session is considered
+													terminated.
 												</p>
 											</div>
-										</div>
-									</section>
 
-									<section className="border-t border-[#EAE8E3] dark:border-[#333] pt-8">
-										<h4 className="text-[10px] uppercase tracking-[0.2em] font-black text-[#0055A4] mb-6 flex items-center gap-2">
-											<div className="w-2 h-2 bg-[#0055A4]" />
-											Session Boundaries
-										</h4>
-										<div className="space-y-4">
-											<label className="text-[10px] uppercase font-bold text-[#888] flex justify-between">
-												<span>Inactivity Threshold</span>
-												<span className="text-[#111] dark:text-[#EAE8E3]">
-													{sessionGapThreshold}m
-												</span>
-											</label>
-											<input
-												type="range"
-												min="3"
-												max="120"
-												step="1"
-												value={sessionGapThreshold}
-												onChange={(e) =>
-													setSessionGapThreshold(Number(e.target.value))
-												}
-												className="w-full accent-[#0055A4] h-1.5 bg-[#F5F5F5] dark:bg-[#1A1A1A] appearance-none border border-[#EAE8E3] dark:border-[#333]"
-											/>
-											<p className="text-[8px] uppercase font-bold text-[#888] leading-tight">
-												Defines when a conversation session is considered
-												terminated.
-											</p>
-										</div>
-
-										<div className="space-y-4">
-											<label className="text-[10px] uppercase font-bold text-[#888] flex justify-between">
-												<span>Max Response Filter</span>
-												<span className="text-[#111] dark:text-[#EAE8E3]">
-													{maxResponseGapThreshold} days
-												</span>
-											</label>
-											<input
-												type="range"
-												min="1"
-												max="60"
-												step="1"
-												value={maxResponseGapThreshold}
-												onChange={(e) =>
-													setMaxResponseGapThreshold(Number(e.target.value))
-												}
-												className="w-full accent-[#0055A4] h-1.5 bg-[#F5F5F5] dark:bg-[#1A1A1A] appearance-none border border-[#EAE8E3] dark:border-[#333]"
-											/>
-											<p className="text-[8px] uppercase font-bold text-[#888] leading-tight">
-												Ignore responses longer than this to avoid extreme
-												outliers skewing metrics.
-											</p>
-										</div>
-									</section>
-
-									<section className="border-t border-[#EAE8E3] dark:border-[#333] pt-8">
-										<h4 className="text-[10px] uppercase tracking-[0.2em] font-black text-[#FFCC00] mb-6 flex items-center gap-2">
-											<div className="w-2 h-2 bg-[#FFCC00]" />
-											Engagement Patterns
-										</h4>
-										<div className="space-y-6">
-											<div className="space-y-3">
+											<div className="space-y-4">
 												<label className="text-[10px] uppercase font-bold text-[#888] flex justify-between">
-													<span>Double Text Min Gap</span>
+													<span>Max Response Filter</span>
 													<span className="text-[#111] dark:text-[#EAE8E3]">
-														{doubleTextMinGap}m
+														{maxResponseGapThreshold} days
 													</span>
 												</label>
 												<input
 													type="range"
 													min="1"
-													max="30"
+													max="60"
 													step="1"
-													value={doubleTextMinGap}
+													value={maxResponseGapThreshold}
 													onChange={(e) =>
-														setDoubleTextGaps(
-															Number(e.target.value),
-															doubleTextMaxGap,
-														)
+														setMaxResponseGapThreshold(Number(e.target.value))
 													}
-													className="w-full accent-[#FFCC00] h-1.5 bg-[#F5F5F5] dark:bg-[#1A1A1A] appearance-none border border-[#EAE8E3] dark:border-[#333]"
+													className="w-full accent-[#0055A4] h-1.5 bg-[#F5F5F5] dark:bg-[#1A1A1A] appearance-none border border-[#EAE8E3] dark:border-[#333]"
 												/>
+												<p className="text-[8px] uppercase font-bold text-[#888] leading-tight">
+													Ignore responses longer than this to avoid extreme
+													outliers skewing metrics.
+												</p>
 											</div>
-											<div className="space-y-3">
-												<label className="text-[10px] uppercase font-bold text-[#888] flex justify-between">
-													<span>Double Text Max Gap</span>
-													<span className="text-[#111] dark:text-[#EAE8E3]">
-														{doubleTextMaxGap}m
-													</span>
-												</label>
-												<input
-													type="range"
-													min="30"
-													max="720"
-													step="10"
-													value={doubleTextMaxGap}
-													onChange={(e) =>
-														setDoubleTextGaps(
-															doubleTextMinGap,
-															Number(e.target.value),
-														)
-													}
-													className="w-full accent-[#FFCC00] h-1.5 bg-[#F5F5F5] dark:bg-[#1A1A1A] appearance-none border border-[#EAE8E3] dark:border-[#333]"
-												/>
+										</section>
+
+										<section className="border-t border-[#EAE8E3] dark:border-[#333] pt-8">
+											<h4 className="text-[10px] uppercase tracking-[0.2em] font-black text-[#FFCC00] mb-6 flex items-center gap-2">
+												<div className="w-2 h-2 bg-[#FFCC00]" />
+												Engagement Patterns
+											</h4>
+											<div className="space-y-6">
+												<div className="space-y-3">
+													<label className="text-[10px] uppercase font-bold text-[#888] flex justify-between">
+														<span>Double Text Min Gap</span>
+														<span className="text-[#111] dark:text-[#EAE8E3]">
+															{doubleTextMinGap}m
+														</span>
+													</label>
+													<input
+														type="range"
+														min="1"
+														max="30"
+														step="1"
+														value={doubleTextMinGap}
+														onChange={(e) =>
+															setDoubleTextGaps(
+																Number(e.target.value),
+																doubleTextMaxGap,
+															)
+														}
+														className="w-full accent-[#FFCC00] h-1.5 bg-[#F5F5F5] dark:bg-[#1A1A1A] appearance-none border border-[#EAE8E3] dark:border-[#333]"
+													/>
+												</div>
+												<div className="space-y-3">
+													<label className="text-[10px] uppercase font-bold text-[#888] flex justify-between">
+														<span>Double Text Max Gap</span>
+														<span className="text-[#111] dark:text-[#EAE8E3]">
+															{doubleTextMaxGap}m
+														</span>
+													</label>
+													<input
+														type="range"
+														min="30"
+														max="720"
+														step="10"
+														value={doubleTextMaxGap}
+														onChange={(e) =>
+															setDoubleTextGaps(
+																doubleTextMinGap,
+																Number(e.target.value),
+															)
+														}
+														className="w-full accent-[#FFCC00] h-1.5 bg-[#F5F5F5] dark:bg-[#1A1A1A] appearance-none border border-[#EAE8E3] dark:border-[#333]"
+													/>
+												</div>
 											</div>
-										</div>
-									</section>
-								</div>
-							</>
+										</section>
+									</div>
+								</>
 							)}
 						</div>
 					</div>

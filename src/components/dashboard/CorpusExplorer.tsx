@@ -1,14 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback, useMemo } from "react";
-import { useChatStore, type FileNode } from "../../store";
-import { deduplicateMessages } from "../../lib/parsers/dedup";
-import type { WorkerRequest, WorkerResponse } from "../../workers/parse-worker";
-import type { NormalizedMessage } from "../../lib/parsers/types";
-
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { buildTree } from "../../lib/files";
+import { deduplicateMessages } from "../../lib/parsers/dedup";
+import type { NormalizedMessage } from "../../lib/parsers/types";
+import { type FileNode, useChatStore } from "../../store";
+import type { WorkerRequest, WorkerResponse } from "../../workers/parse-worker";
 
-interface CorpusExplorerProps { }
+type CorpusExplorerProps = {};
 
 interface TutorialOverlayProps {
 	step: 1 | 2 | 3 | 4;
@@ -22,7 +21,12 @@ interface TutorialOverlayProps {
 	};
 }
 
-function TutorialOverlay({ step, onNext, onSkip, targets }: TutorialOverlayProps) {
+function TutorialOverlay({
+	step,
+	onNext,
+	onSkip,
+	targets,
+}: TutorialOverlayProps) {
 	const currentTarget = useMemo(() => {
 		if (step === 1) return targets.pending;
 		if (step === 2) return targets.actions;
@@ -30,7 +34,12 @@ function TutorialOverlay({ step, onNext, onSkip, targets }: TutorialOverlayProps
 		return targets.active || targets.pending;
 	}, [step, targets]);
 
-	const [coords, setCoords] = useState({ top: 0, left: 0, width: 0, height: 0 });
+	const [coords, setCoords] = useState({
+		top: 0,
+		left: 0,
+		width: 0,
+		height: 0,
+	});
 
 	// Auto-scroll target into view when step changes
 	useEffect(() => {
@@ -87,7 +96,9 @@ function TutorialOverlay({ step, onNext, onSkip, targets }: TutorialOverlayProps
 	}[step as 1 | 2 | 3 | 4];
 
 	const maskStyle = {
-		clipPath: coords.width > 0 ? `polygon(
+		clipPath:
+			coords.width > 0
+				? `polygon(
 			0% 0%, 
 			0% 100%, 
 			${coords.left}px 100%, 
@@ -98,7 +109,8 @@ function TutorialOverlay({ step, onNext, onSkip, targets }: TutorialOverlayProps
 			${coords.left}px 100%, 
 			100% 100%, 
 			100% 0%
-		)` : 'none',
+		)`
+				: "none",
 	};
 
 	if (coords.width === 0) return null;
@@ -117,7 +129,13 @@ function TutorialOverlay({ step, onNext, onSkip, targets }: TutorialOverlayProps
 			<div
 				className="absolute flex flex-col pointer-events-auto transition-all duration-300 ease-out"
 				style={{
-					top: Math.max(100, Math.min(coords.top + (coords.height / 2) - 100, window.innerHeight - 350)),
+					top: Math.max(
+						100,
+						Math.min(
+							coords.top + coords.height / 2 - 100,
+							window.innerHeight - 350,
+						),
+					),
 					left: Math.max(40, coords.left - (boxWidth + 60)),
 					width: boxWidth,
 				}}
@@ -159,7 +177,7 @@ function TutorialOverlay({ step, onNext, onSkip, targets }: TutorialOverlayProps
 				{/* Geometric connecting line */}
 				<div
 					className="absolute top-1/2 -right-10 w-10 h-[2px] bg-[#D93829]"
-					style={{ transform: 'translateY(-50%)' }}
+					style={{ transform: "translateY(-50%)" }}
 				/>
 			</div>
 
@@ -181,7 +199,7 @@ function TutorialOverlay({ step, onNext, onSkip, targets }: TutorialOverlayProps
 	);
 }
 
-export function CorpusExplorer({ }: CorpusExplorerProps) {
+export function CorpusExplorer({}: CorpusExplorerProps) {
 	const {
 		activeFiles,
 		queuedFiles,
@@ -239,7 +257,7 @@ export function CorpusExplorer({ }: CorpusExplorerProps) {
 	// Auto-expand all folders on mount or when files change
 	useEffect(() => {
 		const collectFolderIds = (nodes: FileNode[]): string[] => {
-			let ids: string[] = [];
+			const ids: string[] = [];
 			for (const node of nodes) {
 				if (node.type === "folder") {
 					ids.push(node.id);
@@ -445,11 +463,14 @@ export function CorpusExplorer({ }: CorpusExplorerProps) {
 							<div className="flex items-center group">
 								<button
 									type="button"
-									onClick={() => node.type === "folder" && toggleExpand(node.id)}
-									className={`flex-1 flex items-center gap-2.5 px-2 py-1.5 transition-all text-left ${isQueued
-										? "text-[#888] hover:text-[#111] dark:hover:text-[#EAE8E3]"
-										: "text-[#111] dark:text-[#EAE8E3]"
-										}`}
+									onClick={() =>
+										node.type === "folder" && toggleExpand(node.id)
+									}
+									className={`flex-1 flex items-center gap-2.5 px-2 py-1.5 transition-all text-left ${
+										isQueued
+											? "text-[#888] hover:text-[#111] dark:hover:text-[#EAE8E3]"
+											: "text-[#111] dark:text-[#EAE8E3]"
+									}`}
 								>
 									{node.type === "folder" ? (
 										<div
@@ -514,7 +535,10 @@ export function CorpusExplorer({ }: CorpusExplorerProps) {
 	// Click away to close dropdown
 	useEffect(() => {
 		const handleClickOutside = (e: MouseEvent) => {
-			if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+			if (
+				dropdownRef.current &&
+				!dropdownRef.current.contains(e.target as Node)
+			) {
 				setIsDropdownOpen(false);
 			}
 		};

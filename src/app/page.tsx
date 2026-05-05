@@ -3,8 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useRef } from "react";
 import { ThemeToggle } from "../components/ThemeToggle";
-import { useChatStore } from "../store";
 import { buildTree } from "../lib/files";
+import { useChatStore } from "../store";
 
 export default function WelcomePage() {
 	const router = useRouter();

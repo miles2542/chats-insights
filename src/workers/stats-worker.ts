@@ -381,7 +381,10 @@ addEventListener("message", (event: MessageEvent<StatsRequest>) => {
 	startD.setHours(0, 0, 0, 0);
 	const endD = new Date(maxTs + (timezoneOffset - systemOffset) * 60000);
 	endD.setHours(0, 0, 0, 0);
-	const totalRangeDays = filtered.length > 0 ? Math.round((endD.getTime() - startD.getTime()) / 86400000) + 1 : 0;
+	const totalRangeDays =
+		filtered.length > 0
+			? Math.round((endD.getTime() - startD.getTime()) / 86400000) + 1
+			: 0;
 
 	postMessage({
 		senderStats,

@@ -7,7 +7,11 @@ import { ChartContainer } from "../../components/dashboard/ChartContainer";
 import { InfoTooltip } from "../../components/dashboard/InfoTooltip";
 import TimelineProjection from "../../components/dashboard/overview/TimelineProjection";
 import { MessageCategory } from "../../lib/parsers/types";
-import { formatDate, getSystemOffset, getAdjustedDate } from "../../lib/utils/time";
+import {
+	formatDate,
+	getAdjustedDate,
+	getSystemOffset,
+} from "../../lib/utils/time";
 import { useChatStore } from "../../store";
 import type { StatsResponse } from "../../workers/stats-worker";
 
@@ -247,7 +251,6 @@ export default function DashboardOverview() {
 	return (
 		<div className="grid grid-cols-12 gap-6 animate-in fade-in duration-500">
 			<div className="col-span-12">
-
 				{/* KPI Row */}
 				<div className="grid grid-cols-4 gap-6 mb-6">
 					<div className="bg-[#111] text-[#EAE8E3] dark:bg-[#EAE8E3] dark:text-[#111] p-6 shadow-sm relative overflow-hidden">
@@ -290,7 +293,12 @@ export default function DashboardOverview() {
 							{data ? data.daysActiveCount.toLocaleString() : "..."}
 							{data && (
 								<span className="text-[10px] font-bold text-[#888] lowercase">
-									({((data.daysActiveCount / (data.totalRangeDays || 1)) * 100).toFixed(1)}% of {data.totalRangeDays} days)
+									(
+									{(
+										(data.daysActiveCount / (data.totalRangeDays || 1)) *
+										100
+									).toFixed(1)}
+									% of {data.totalRangeDays} days)
 								</span>
 							)}
 						</div>
@@ -395,7 +403,13 @@ export default function DashboardOverview() {
 											{tooltip && <InfoTooltip content={tooltip as string} />}
 										</div>
 										<span>
-											{isDirect ? (data.messageStats as any)[key as string]?.toLocaleString() || 0 : data.messageStats.types?.[key as string]?.toLocaleString() || 0}
+											{isDirect
+												? (data.messageStats as any)[
+														key as string
+													]?.toLocaleString() || 0
+												: data.messageStats.types?.[
+														key as string
+													]?.toLocaleString() || 0}
 										</span>
 									</div>
 								))}
@@ -405,7 +419,9 @@ export default function DashboardOverview() {
 								<div className="flex justify-between items-end">
 									<span className="text-[9px] uppercase font-bold text-[#888]">
 										Total Sessions
-										<InfoTooltip content={`Total conversations calculated based on your ${sessionGapThreshold}m inactivity threshold. See Engagement page for deeper analysis.`} />
+										<InfoTooltip
+											content={`Total conversations calculated based on your ${sessionGapThreshold}m inactivity threshold. See Engagement page for deeper analysis.`}
+										/>
 									</span>
 									<span className="text-sm font-bold font-[family-name:var(--font-outfit)]">
 										{data.messageStats.totalSessions?.toLocaleString() || "—"}
@@ -417,7 +433,10 @@ export default function DashboardOverview() {
 										<InfoTooltip content="Higher values indicate sustained, deep conversations. Lower values suggest brief updates or check-ins. This also reflects participant texting styles (long-form vs. rapid-fire)." />
 									</span>
 									<span className="text-sm font-bold font-[family-name:var(--font-outfit)]">
-										{(data.messageStats.total / (data.messageStats.totalSessions || 1)).toFixed(2)}
+										{(
+											data.messageStats.total /
+											(data.messageStats.totalSessions || 1)
+										).toFixed(2)}
 									</span>
 								</div>
 								<div className="flex justify-between items-end">
@@ -451,7 +470,9 @@ export default function DashboardOverview() {
 											content={
 												<div className="flex flex-col gap-0.5">
 													<div>
-														<span className="text-[#888] font-normal">From </span>
+														<span className="text-[#888] font-normal">
+															From{" "}
+														</span>
 														{renderSubtleDate(
 															data.messageStats.longestGap.start,
 															"full",
@@ -483,11 +504,14 @@ export default function DashboardOverview() {
 											content={
 												<div className="flex flex-col gap-0.5">
 													<div className="text-[10px] font-black text-[#D93829] mb-1 uppercase tracking-wider border-b border-[#111]/5 pb-1">
-														{data.messageStats.longestStreak.totalMessages?.toLocaleString() || 0}{" "}
+														{data.messageStats.longestStreak.totalMessages?.toLocaleString() ||
+															0}{" "}
 														messages
 													</div>
 													<div>
-														<span className="text-[#888] font-normal">From </span>
+														<span className="text-[#888] font-normal">
+															From{" "}
+														</span>
 														{renderSubtleDate(
 															data.messageStats.longestStreak.start,
 															"date",
@@ -519,7 +543,9 @@ export default function DashboardOverview() {
 														messages
 													</div>
 													<div>
-														<span className="text-[#888] font-normal">From </span>
+														<span className="text-[#888] font-normal">
+															From{" "}
+														</span>
 														{renderSubtleDate(
 															data.messageStats.longestSession.start,
 															"full",
