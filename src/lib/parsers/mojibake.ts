@@ -9,9 +9,9 @@ export function fixMojibake(str: string): string {
 		bytes[i] = str.charCodeAt(i);
 	}
 	try {
-		return new TextDecoder("utf-8").decode(bytes);
+		return new TextDecoder("utf-8").decode(bytes).normalize("NFC");
 	} catch {
-		return str;
+		return str.normalize("NFC");
 	}
 }
 

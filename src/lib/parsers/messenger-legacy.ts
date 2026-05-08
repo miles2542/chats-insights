@@ -29,32 +29,45 @@ export function parseMessengerLegacy(json: any): ParsedChat {
 				actor: r.actor,
 			}));
 
-			// Determine media type and URI
-			let mediaType: NormalizedMessage["mediaType"] = null;
-			let mediaUri: string | null = null;
+			// Determine media type and URI (Backward compatibility + Full list)
+			const mediaItems: {
+				uri: string;
+				type: NormalizedMessage["mediaType"];
+			}[] = [];
 
 			if (fixedMsg.photos?.length) {
-				mediaType = "photo";
-				mediaUri = fixedMsg.photos[0].uri;
-			} else if (fixedMsg.videos?.length) {
-				mediaType = "video";
-				mediaUri = fixedMsg.videos[0].uri;
-			} else if (fixedMsg.gifs?.length) {
-				mediaType = "gif";
-				mediaUri = fixedMsg.gifs[0].uri;
-			} else if (fixedMsg.sticker) {
-				mediaType = "sticker";
-				mediaUri = fixedMsg.sticker.uri;
-			} else if (fixedMsg.audio_files?.length) {
-				mediaType = "audio";
-				mediaUri = fixedMsg.audio_files[0].uri;
-			} else if (fixedMsg.files?.length) {
-				mediaType = "file";
-				mediaUri = fixedMsg.files[0].uri;
-			} else if (fixedMsg.share) {
-				mediaType = "link";
-				mediaUri = fixedMsg.share.link;
+				fixedMsg.photos.forEach((p: any) =>
+					mediaItems.push({ uri: p.uri, type: "photo" }),
+				);
 			}
+			if (fixedMsg.videos?.length) {
+				fixedMsg.videos.forEach((v: any) =>
+					mediaItems.push({ uri: v.uri, type: "video" }),
+				);
+			}
+			if (fixedMsg.gifs?.length) {
+				fixedMsg.gifs.forEach((g: any) =>
+					mediaItems.push({ uri: g.uri, type: "gif" }),
+				);
+			}
+			if (fixedMsg.sticker) {
+				mediaItems.push({ uri: fixedMsg.sticker.uri, type: "sticker" });
+			}
+			if (fixedMsg.audio_files?.length) {
+				fixedMsg.audio_files.forEach((a: any) =>
+					mediaItems.push({ uri: a.uri, type: "audio" }),
+				);
+			}
+			if (fixedMsg.files?.length) {
+				fixedMsg.files.forEach((f: any) =>
+					mediaItems.push({ uri: f.uri, type: "file" }),
+				);
+			}
+			if (fixedMsg.share) {
+				mediaItems.push({ uri: fixedMsg.share.link, type: "link" });
+			}
+
+			const primaryMedia = mediaItems[0] || null;
 
 			const callDurationSec = fixedMsg.call_duration ?? null;
 			const callEndTimeMs =
@@ -65,12 +78,14 @@ export function parseMessengerLegacy(json: any): ParsedChat {
 					: null;
 
 			return {
+				id: crypto.randomUUID(),
 				senderName: fixedMsg.sender_name,
 				timestampMs: fixedMsg.timestamp_ms,
 				content,
 				category,
-				mediaType,
-				mediaUri,
+				mediaType: primaryMedia?.type ?? null,
+				mediaUri: primaryMedia?.uri ?? null,
+				mediaItems,
 				callDurationSec,
 				callStartTimeMs,
 				callEndTimeMs,

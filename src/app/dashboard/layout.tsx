@@ -5,6 +5,8 @@ import { useEffect, useMemo, useState } from "react";
 import { DateRangePicker } from "../../components/DateRangePicker";
 import { CorpusExplorer } from "../../components/dashboard/CorpusExplorer";
 import { DayWindowSlider } from "../../components/dashboard/controls/DayWindowSlider";
+import { InboxPanel } from "../../components/dashboard/inbox/InboxPanel";
+import { InboxTabTrigger } from "../../components/dashboard/inbox/InboxTabTrigger";
 import { ThemeToggle } from "../../components/ThemeToggle";
 import { useChatStore } from "../../store";
 
@@ -94,7 +96,7 @@ export default function DashboardLayout({
 	if (!mounted) return null;
 
 	return (
-		<div className="min-h-screen bg-[#F5F5F5] dark:bg-[#0A0A0A] flex font-[family-name:var(--font-outfit)] text-[#111111] dark:text-[#EAE8E3] selection:bg-[#D93829] selection:text-white">
+		<div className="min-h-screen bg-[#F5F5F5] dark:bg-[#0A0A0A] flex text-[#111111] dark:text-[#EAE8E3] selection:bg-[#D93829] selection:text-white">
 			{/* Sidebar - Navigation (Subdued, takes less attention but clearly visible) */}
 			<aside className="w-64 bg-white dark:bg-[#111111] border-r border-[#EAE8E3] dark:border-[#333] flex flex-col fixed h-screen z-20">
 				<div className="p-6 border-b border-[#EAE8E3] dark:border-[#333]">
@@ -540,6 +542,12 @@ export default function DashboardLayout({
 
 			{/* Corpus Explorer Drawer */}
 			<CorpusExplorer />
+
+			{/* Global Inbox Tab Trigger (fixed right-edge sliver) */}
+			<InboxTabTrigger />
+
+			{/* Global Inbox Panel (slides in from right) */}
+			<InboxPanel />
 		</div>
 	);
 }

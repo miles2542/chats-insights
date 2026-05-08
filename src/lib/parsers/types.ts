@@ -25,13 +25,20 @@ export type MediaType =
 	| "file"
 	| "link";
 
+export interface MediaItem {
+	uri: string;
+	type: MediaType;
+}
+
 export interface NormalizedMessage {
+	id: string; // REQUIRED: For virtualization and search/jump
 	senderName: string;
 	timestampMs: number;
 	content: string | null;
 	category: MessageCategory;
 	mediaType: MediaType | null;
 	mediaUri: string | null;
+	mediaItems: MediaItem[];
 	callDurationSec: number | null;
 	callStartTimeMs: number | null;
 	callEndTimeMs: number | null;

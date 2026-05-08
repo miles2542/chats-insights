@@ -10,6 +10,8 @@ export interface FileNode {
 	path: string;
 }
 
+export type MediaMap = Map<string, File>;
+
 interface ChatStore {
 	messages: NormalizedMessage[];
 	participants: string[];
@@ -20,6 +22,7 @@ interface ChatStore {
 	// Corpus Management
 	activeFiles: FileNode[];
 	queuedFiles: FileNode[];
+	mediaMap: MediaMap;
 	isExplorerOpen: boolean;
 
 	// Filters
@@ -79,6 +82,29 @@ interface ChatStore {
 		error: string | null;
 	};
 
+	// Inbox State
+	inbox: {
+		isOpen: boolean;
+		searchTerm: string;
+		searchMode: "fuzzy" | "exact" | "regex";
+		selectedMessageId: string | null;
+		isSidebarOpen: boolean;
+		isInfoOpen: boolean;
+		stagedMessages: NormalizedMessage[];
+		nicknames: Record<string, string>;
+		customAvatars: Record<string, string>;
+		quickReaction: string;
+		lightboxMessageId: string | null;
+		panelWidth: number;
+		customThreadName: string | null;
+		customThreadAvatar: string | null;
+		highlightedMessageId: string | null;
+		isCalendarOpen: boolean;
+		activeMediaView: "photos" | "audio" | "files" | null;
+		mediaSenderFilters: string[];
+	};
+	stagedFilesBuffer: File[];
+
 	setChatData: (data: {
 		messages: NormalizedMessage[];
 		participants: string[];
@@ -88,6 +114,7 @@ interface ChatStore {
 	setOwner: (owner: string) => void;
 	setQueuedFiles: (files: FileNode[]) => void;
 	setActiveFiles: (files: FileNode[]) => void;
+	setMediaMap: (map: MediaMap) => void;
 	setExplorerOpen: (open: boolean) => void;
 	toggleExplorer: () => void;
 	setSelectedParticipants: (participants: string[]) => void;
@@ -107,6 +134,11 @@ interface ChatStore {
 	setEngagementData: (data: Partial<ChatStore["engagement"]>) => void;
 	setCallsData: (data: Partial<ChatStore["calls"]>) => void;
 	setSocialCircleData: (data: Partial<ChatStore["socialCircle"]>) => void;
+	setInboxData: (data: Partial<ChatStore["inbox"]>) => void;
+	updateNickname: (participant: string, nickname: string) => void;
+	updateAvatar: (participant: string, avatarUrl: string) => void;
+	updateThreadMetadata: (name?: string, avatarUrl?: string) => void;
+	toggleInbox: () => void;
 	setHasSeenTutorial: (val: boolean) => void;
 	reset: () => void;
 }
@@ -120,6 +152,7 @@ export const useChatStore = create<ChatStore>((set) => ({
 
 	activeFiles: [],
 	queuedFiles: [],
+	mediaMap: new Map(),
 	isExplorerOpen: false,
 
 	selectedParticipants: [],
@@ -176,16 +209,74 @@ export const useChatStore = create<ChatStore>((set) => ({
 		rawThreads: null,
 		error: null,
 	},
+	inbox: {
+		isOpen: false,
+		searchTerm: "",
+		searchMode: "fuzzy",
+		selectedMessageId: null,
+		isSidebarOpen: true,
+		isInfoOpen: true,
+		stagedMessages: [],
+		nicknames: {},
+		customAvatars: {},
+		quickReaction: "👍",
+		lightboxMessageId: null,
+		panelWidth: 950,
+		customThreadName: null,
+		customThreadAvatar: null,
+		highlightedMessageId: null,
+		isCalendarOpen: false,
+		activeMediaView: null,
+		mediaSenderFilters: [],
+	},
+	stagedFilesBuffer: [],
 
 	setChatData: (data) =>
-		set({
+		set((state) => ({
 			...data,
 			isLoaded: true,
-			selectedParticipants: data.participants, // Default to all selected
-		}),
-	setOwner: (owner) => set({ owner }),
+			selectedParticipants: data.participants,
+			inbox: {
+				isOpen: false,
+				searchTerm: "",
+				searchMode: "fuzzy",
+				selectedMessageId: null,
+				isSidebarOpen: true,
+				isInfoOpen: true,
+				stagedMessages: [],
+				nicknames: {},
+				customAvatars: {},
+				quickReaction: "👍",
+				lightboxMessageId: null,
+				panelWidth: 950,
+				customThreadName: null,
+				customThreadAvatar: null,
+				highlightedMessageId: null,
+				isCalendarOpen: false,
+				activeMediaView: null,
+				mediaSenderFilters: [],
+			},
+		})),
+	setOwner: (owner) =>
+		set((state) => ({
+			owner,
+			inbox: {
+				...state.inbox,
+				isOpen: false,
+				searchTerm: "",
+				selectedMessageId: null,
+				stagedMessages: [],
+				nicknames: {},
+				customAvatars: {},
+				quickReaction: "👍",
+				lightboxMessageId: null,
+				customThreadName: null,
+				customThreadAvatar: null,
+			},
+		})),
 	setQueuedFiles: (files) => set({ queuedFiles: files }),
 	setActiveFiles: (files) => set({ activeFiles: files }),
+	setMediaMap: (map) => set({ mediaMap: map }),
 	setExplorerOpen: (open) => set({ isExplorerOpen: open }),
 	toggleExplorer: () =>
 		set((state) => ({ isExplorerOpen: !state.isExplorerOpen })),
@@ -220,6 +311,68 @@ export const useChatStore = create<ChatStore>((set) => ({
 		set((state) => ({
 			socialCircle: { ...state.socialCircle, ...data },
 		})),
+	setInboxData: (data) =>
+		set((state) => ({
+			inbox: { ...state.inbox, ...data },
+		})),
+	updateNickname: (participant, nickname) =>
+		set((state) => {
+			const newNicknames = {
+				...state.inbox.nicknames,
+				[participant]: nickname,
+			};
+			let newThreadName = state.threadName;
+
+			// If 1-1 chat and renaming the other person, sync thread name
+			const realParticipants = state.participants.filter(
+				(p) => p !== "Meta AI",
+			);
+			if (realParticipants.length === 2 && participant !== state.owner) {
+				newThreadName = nickname || participant;
+			}
+
+			return {
+				threadName: newThreadName,
+				inbox: { ...state.inbox, nicknames: newNicknames },
+			};
+		}),
+	updateAvatar: (participant, avatarUrl) =>
+		set((state) => {
+			const newAvatars = {
+				...state.inbox.customAvatars,
+				[participant]: avatarUrl,
+			};
+			let newCustomThreadAvatar = state.inbox.customThreadAvatar;
+
+			// If 1-1 chat and updating the other person, sync thread avatar
+			const realParticipants = state.participants.filter(
+				(p) => p !== "Meta AI",
+			);
+			if (realParticipants.length === 2 && participant !== state.owner) {
+				newCustomThreadAvatar = avatarUrl;
+			}
+
+			return {
+				inbox: {
+					...state.inbox,
+					customAvatars: newAvatars,
+					customThreadAvatar: newCustomThreadAvatar,
+				},
+			};
+		}),
+	updateThreadMetadata: (name, avatarUrl) =>
+		set((state) => ({
+			threadName: name !== undefined ? name : state.threadName,
+			inbox: {
+				...state.inbox,
+				customThreadAvatar:
+					avatarUrl !== undefined ? avatarUrl : state.inbox.customThreadAvatar,
+			},
+		})),
+	toggleInbox: () =>
+		set((state) => ({
+			inbox: { ...state.inbox, isOpen: !state.inbox.isOpen },
+		})),
 	setHasSeenTutorial: (val) => {
 		if (typeof window !== "undefined") {
 			sessionStorage.setItem("hasSeenOnboarding", val ? "true" : "false");
@@ -235,7 +388,10 @@ export const useChatStore = create<ChatStore>((set) => ({
 			isLoaded: false,
 			activeFiles: [],
 			queuedFiles: [],
+			mediaMap: new Map(),
+			stagedFilesBuffer: [],
 			isExplorerOpen: false,
+
 			selectedParticipants: [],
 			timeRange: [null, null],
 			timezoneOffset: -new Date().getTimezoneOffset(),
@@ -281,6 +437,26 @@ export const useChatStore = create<ChatStore>((set) => ({
 				isInitialized: false,
 				rawThreads: null,
 				error: null,
+			},
+			inbox: {
+				isOpen: false,
+				searchTerm: "",
+				searchMode: "fuzzy",
+				selectedMessageId: null,
+				isSidebarOpen: true,
+				isInfoOpen: true,
+				stagedMessages: [],
+				nicknames: {},
+				customAvatars: {},
+				quickReaction: "👍",
+				lightboxMessageId: null,
+				panelWidth: 950,
+				customThreadName: null,
+				customThreadAvatar: null,
+				highlightedMessageId: null,
+				isCalendarOpen: false,
+				activeMediaView: null,
+				mediaSenderFilters: [],
 			},
 		}),
 }));

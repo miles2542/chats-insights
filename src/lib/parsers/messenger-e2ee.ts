@@ -17,25 +17,30 @@ export function parseMessengerE2EE(json: any): ParsedChat {
 			const category = classifyE2EEMessage(msg);
 
 			// Media Handling
-			let mediaType: NormalizedMessage["mediaType"] = null;
-			let mediaUri: string | null = null;
+			const mediaItems: {
+				uri: string;
+				type: NormalizedMessage["mediaType"];
+			}[] = [];
 
-			if (Array.isArray(msg.media) && msg.media.length > 0) {
-				mediaUri = msg.media[0].uri;
-				if (mediaUri === "Failed to download media") {
-					mediaType = null; // Mark as broken
-				} else if (mediaUri) {
-					mediaType = inferMediaType(mediaUri);
-				}
+			if (Array.isArray(msg.media)) {
+				msg.media.forEach((m: any) => {
+					if (m.uri && m.uri !== "Failed to download media") {
+						mediaItems.push({ uri: m.uri, type: inferMediaType(m.uri) });
+					}
+				});
 			}
 
+			const primaryMedia = mediaItems[0] || null;
+
 			return {
+				id: crypto.randomUUID(),
 				senderName: msg.senderName,
 				timestampMs: msg.timestamp,
 				content,
 				category,
-				mediaType,
-				mediaUri,
+				mediaType: primaryMedia?.type ?? null,
+				mediaUri: primaryMedia?.uri ?? null,
+				mediaItems,
 				callDurationSec: null, // E2EE usually lacks call metadata in JSON
 				callStartTimeMs: null,
 				callEndTimeMs: null,

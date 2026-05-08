@@ -125,19 +125,14 @@ export default function DashboardOverview() {
 			],
 			tooltip: { trigger: "item" },
 			legend: {
-				show: true,
-				type: "scroll",
-				bottom: 5,
-				left: "center",
-				textStyle: { color: labelColor, fontSize: 10, fontWeight: "bold" },
-				icon: "rect",
+				show: false,
 			},
 			series: [
 				{
 					name: "Messages sent",
 					type: "pie",
-					radius: ["35%", "80%"],
-					center: ["22%", "58%"],
+					radius: ["40%", "75%"],
+					center: ["22%", "55%"],
 					itemStyle: { borderRadius: 0, borderWidth: 0 },
 					label: {
 						show: true,
@@ -153,8 +148,8 @@ export default function DashboardOverview() {
 				{
 					name: "Words sent",
 					type: "pie",
-					radius: ["35%", "80%"],
-					center: ["78%", "58%"],
+					radius: ["40%", "75%"],
+					center: ["78%", "55%"],
 					itemStyle: { borderRadius: 0, borderWidth: 0 },
 					label: {
 						show: true,
@@ -176,20 +171,14 @@ export default function DashboardOverview() {
 		return {
 			tooltip: { trigger: "item", formatter: "{b}: {c}" },
 			legend: {
-				show: true,
-				type: "scroll",
-				orient: "vertical",
-				right: 0,
-				top: "middle",
-				textStyle: { color: labelColor, fontSize: 10, fontWeight: "bold" },
-				icon: "rect",
+				show: false,
 			},
 			series: [
 				{
 					name: "Media",
 					type: "pie",
 					radius: ["40%", "70%"],
-					center: ["40%", "50%"],
+					center: ["50%", "50%"],
 					avoidLabelOverlap: true,
 					itemStyle: { borderRadius: 0, borderWidth: 0 },
 					label: {
@@ -309,10 +298,20 @@ export default function DashboardOverview() {
 			<div className="col-span-8">
 				<ChartContainer>
 					{data ? (
-						<ReactECharts
-							option={responseMatrixOption}
-							style={{ height: "100%", width: "100%" }}
-						/>
+						<div className="flex flex-col h-full">
+							<div className="flex-1">
+								<ReactECharts
+									option={responseMatrixOption}
+									style={{ height: "100%", width: "100%" }}
+								/>
+							</div>
+							<PaginatedLegend
+								items={data.senderStats.messages.map((m, i) => ({
+									name: m.name,
+									color: bauhausColors[i % bauhausColors.length],
+								}))}
+							/>
+						</div>
 					) : (
 						<div className="h-full w-full flex items-center justify-center text-[10px] uppercase tracking-widest font-bold text-[#888]">
 							Calculating Metrics...
@@ -323,10 +322,29 @@ export default function DashboardOverview() {
 			<div className="col-span-4">
 				<ChartContainer title="Media Types">
 					{data ? (
-						<ReactECharts
-							option={mediaBreakdownOption}
-							style={{ height: "100%", width: "100%" }}
-						/>
+						<div className="flex flex-col h-full">
+							<div className="flex-1">
+								<ReactECharts
+									option={mediaBreakdownOption}
+									style={{ height: "100%", width: "100%" }}
+								/>
+							</div>
+							<PaginatedLegend
+								items={data.categoryCounts.map((c, i) => ({
+									name: c.name,
+									color: [
+										primaryColor,
+										"#0055A4",
+										"#FFCC00",
+										"#111111",
+										"#555555",
+										"#F47A1F",
+										"#2B5292",
+										"#F4C300",
+									][i % 8],
+								}))}
+							/>
+						</div>
 					) : (
 						<div className="h-full w-full flex items-center justify-center text-[10px] uppercase tracking-widest font-bold text-[#888]">
 							Analyzing Media...
@@ -657,3 +675,89 @@ export default function DashboardOverview() {
 		</div>
 	);
 }
+
+interface LegendItem {
+	name: string;
+	color: string;
+}
+
+const PaginatedLegend = ({ items }: { items: LegendItem[] }) => {
+	const [page, setPage] = useState(0);
+	const itemsPerPage = 8;
+	const totalPages = Math.ceil(items.length / itemsPerPage);
+
+	const currentItems = items.slice(
+		page * itemsPerPage,
+		(page + 1) * itemsPerPage,
+	);
+
+	if (items.length === 0) return null;
+
+	return (
+		<div className="mt-2 pb-2">
+			<div className="flex flex-wrap justify-center gap-x-4 gap-y-2 px-4">
+				{currentItems.map((item) => (
+					<div key={item.name} className="flex items-center gap-1.5 min-w-0">
+						<div
+							className="w-2 h-2 flex-shrink-0"
+							style={{ backgroundColor: item.color }}
+						/>
+						<span className="text-[10px] font-bold text-[#666] dark:text-[#999] truncate uppercase tracking-tighter">
+							{item.name}
+						</span>
+					</div>
+				))}
+			</div>
+
+			{totalPages > 1 && (
+				<div className="flex justify-center items-center gap-4 mt-3">
+					<button
+						onClick={() => setPage((p) => Math.max(0, p - 1))}
+						disabled={page === 0}
+						className="p-1 hover:bg-[#F2F2F7] dark:hover:bg-[#222] rounded disabled:opacity-20 transition-all"
+					>
+						<ChevronLeftIcon className="w-3 h-3" />
+					</button>
+					<span className="text-[9px] font-black text-[#CCC] uppercase tracking-[0.2em]">
+						Page {page + 1} / {totalPages}
+					</span>
+					<button
+						onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+						disabled={page === totalPages - 1}
+						className="p-1 hover:bg-[#F2F2F7] dark:hover:bg-[#222] rounded disabled:opacity-20 transition-all"
+					>
+						<ChevronRightIcon className="w-3 h-3" />
+					</button>
+				</div>
+			)}
+		</div>
+	);
+};
+
+const ChevronLeftIcon = ({ className }: any) => (
+	<svg
+		viewBox="0 0 24 24"
+		fill="none"
+		stroke="currentColor"
+		strokeWidth="3"
+		strokeLinecap="round"
+		strokeLinejoin="round"
+		className={className}
+	>
+		<polyline points="15 18 9 12 15 6" />
+	</svg>
+);
+
+const ChevronRightIcon = ({ className }: any) => (
+	<svg
+		viewBox="0 0 24 24"
+		fill="none"
+		stroke="currentColor"
+		strokeWidth="3"
+		strokeLinecap="round"
+		strokeLinejoin="round"
+		className={className}
+	>
+		<polyline points="9 18 15 12 9 6" />
+	</svg>
+);

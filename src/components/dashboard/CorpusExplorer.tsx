@@ -214,6 +214,7 @@ export function CorpusExplorer({}: CorpusExplorerProps) {
 		setExplorerOpen,
 		hasSeenTutorial,
 		setHasSeenTutorial,
+		stagedFilesBuffer,
 	} = useChatStore();
 
 	const [status, setStatus] = useState<"idle" | "parsing">("idle");
@@ -244,6 +245,8 @@ export function CorpusExplorer({}: CorpusExplorerProps) {
 	useEffect(() => {
 		const handleEsc = (e: KeyboardEvent) => {
 			if (e.key === "Escape") {
+				// [35] Don't close explorer if a lightbox is currently open
+				if (useChatStore.getState().inbox.lightboxMessageId) return;
 				if (tutorialStep) setTutorialStep(null);
 				else setExplorerOpen(false);
 			}
@@ -284,16 +287,15 @@ export function CorpusExplorer({}: CorpusExplorerProps) {
 		const fileList = e.target.files;
 		if (!fileList) return;
 
-		const selectedFiles: File[] = [];
-		for (let i = 0; i < fileList.length; i++) {
-			const f = fileList[i];
-			if (f.name.endsWith(".json")) {
-				selectedFiles.push(f);
-			}
-		}
+		const newFiles: File[] = Array.from(fileList);
+		useChatStore.setState((s) => ({
+			stagedFilesBuffer: [...s.stagedFilesBuffer, ...newFiles],
+		}));
 
-		if (selectedFiles.length > 0) {
-			const newTree = buildTree(selectedFiles);
+		const jsonFiles = newFiles.filter((f) => f.name.endsWith(".json"));
+
+		if (jsonFiles.length > 0) {
+			const newTree = buildTree(jsonFiles);
 			setQueuedFiles([...queuedFiles, ...newTree]);
 		}
 
@@ -326,10 +328,23 @@ export function CorpusExplorer({}: CorpusExplorerProps) {
 		return files;
 	};
 
+	const { setMediaMap } = useChatStore();
+
 	const handleProcess = useCallback(
 		(targetFiles: FileNode[]) => {
-			const rawFiles = getAllRawFiles(targetFiles);
-			if (rawFiles.length === 0) {
+			const rawJsonFiles = getAllRawFiles(targetFiles);
+
+			// Populate Media Map from all uploaded files
+			const newMediaMap = new Map<string, File>();
+			stagedFilesBuffer.forEach((f) => {
+				if (!f.name.endsWith(".json")) {
+					const path = f.webkitRelativePath || f.name;
+					newMediaMap.set(path, f);
+				}
+			});
+			setMediaMap(newMediaMap);
+
+			if (rawJsonFiles.length === 0) {
 				setChatData({
 					messages: [],
 					participants: [],
@@ -342,17 +357,17 @@ export function CorpusExplorer({}: CorpusExplorerProps) {
 			setStatus("parsing");
 			setProgress({
 				current: 0,
-				total: rawFiles.length,
+				total: rawJsonFiles.length,
 				text: "Initializing Workers...",
 			});
 
 			const numWorkers = Math.min(
 				navigator.hardwareConcurrency || 4,
-				Math.ceil(rawFiles.length / 10),
+				Math.ceil(rawJsonFiles.length / 10),
 				8,
 			);
 			const chunks = Array.from({ length: numWorkers }, () => [] as File[]);
-			rawFiles.forEach((f, i) => chunks[i % numWorkers].push(f));
+			rawJsonFiles.forEach((f, i) => chunks[i % numWorkers].push(f));
 
 			const allMessages: NormalizedMessage[] = [];
 			const finalParticipants = new Set<string>();
@@ -431,7 +446,7 @@ export function CorpusExplorer({}: CorpusExplorerProps) {
 				} satisfies WorkerRequest);
 			}
 		},
-		[setChatData, owner, setExplorerOpen],
+		[setChatData, owner, setExplorerOpen, stagedFilesBuffer],
 	);
 
 	const initiateProcess = () => {
@@ -583,6 +598,9 @@ export function CorpusExplorer({}: CorpusExplorerProps) {
 		}
 
 		await Promise.all(entryPromises);
+		useChatStore.setState((s) => ({
+			stagedFilesBuffer: [...s.stagedFilesBuffer, ...selectedFiles],
+		}));
 
 		if (selectedFiles.length > 0) {
 			const newTree = buildTree(selectedFiles);
@@ -758,7 +776,7 @@ export function CorpusExplorer({}: CorpusExplorerProps) {
 
 				<div className="p-6 border-t-2 border-[#111] dark:border-[#EAE8E3] bg-white dark:bg-[#1A1A1A]">
 					<div className="flex flex-col gap-3 relative" ref={dropdownRef}>
-						<label className="text-[9px] uppercase font-black tracking-widest text-[#888]">
+						<label className="text-[9px] uppercase font-black tracking-widest text-[#888] font-sans">
 							Select Owner (You)
 						</label>
 
@@ -767,7 +785,9 @@ export function CorpusExplorer({}: CorpusExplorerProps) {
 							onClick={() => setIsDropdownOpen(!isDropdownOpen)}
 							className={`w-full border-2 px-4 py-3 text-[10px] font-black uppercase tracking-widest text-left flex justify-between items-center transition-all ${isDropdownOpen ? "border-[#D93829] bg-[#111] text-white dark:bg-[#EAE8E3] dark:text-[#111]" : "bg-[#EAE8E3] dark:bg-[#111] border-[#111] dark:border-[#EAE8E3] hover:border-[#D93829]"}`}
 						>
-							<span className="truncate">{owner || "Auto-Detecting..."}</span>
+							<span className="truncate">
+								{(owner || "Auto-Detecting...").normalize("NFC")}
+							</span>
 							<svg
 								viewBox="0 0 24 24"
 								fill="none"
@@ -808,7 +828,7 @@ export function CorpusExplorer({}: CorpusExplorerProps) {
 												}}
 												className={`w-full px-4 py-2 text-left text-[10px] font-bold uppercase tracking-widest transition-colors hover:bg-[#D93829] hover:text-white ${owner === p ? "bg-[#D93829]/10 text-[#D93829] border-l-4 border-[#D93829]" : ""}`}
 											>
-												{p}
+												{p.normalize("NFC")}
 											</button>
 										))
 									)}
